@@ -1,0 +1,18 @@
+### Elixir ###
+/_build
+/cover
+/deps
+/doc
+/.fetch
+erl_crash.dump
+*.ez
+*.beam
+
+### Phoenix ###
+_build/
+/db
+/*.ez
+node_modules/
+/priv/static/
+/config/prod.secret.exs
+/rel
