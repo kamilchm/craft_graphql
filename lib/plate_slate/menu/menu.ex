@@ -29,6 +29,19 @@ defmodule PlateSlate.Menu do
     Repo.all(Category)
   end
 
+  def list_categories(filters) do
+    filters
+    |> Enum.reduce(Category, fn
+      {_, nil}, query ->
+        query
+      {:name, name}, query ->
+        from q in query, where: ilike(q.name, ^"%#{name}%")
+      {:order, order}, query ->
+        from q in query, order_by: {^order, :name}
+    end)
+    |> Repo.all
+  end
+
   @doc """
   Gets a single category.
 
@@ -142,6 +155,10 @@ defmodule PlateSlate.Menu do
         from q in query, where: q.price >= ^price
       {:priced_below, price}, query ->
         from q in query, where: q.price <= ^price
+      {:added_after, date}, query ->
+        from q in query, where: q.added_on >= ^date
+      {:added_before, date}, query ->
+        from q in query, where: q.added_on <= ^date
       {:category, category_name}, query ->
         from q in query,
           join: c in assoc(q, :category),

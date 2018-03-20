@@ -141,4 +141,40 @@ defmodule PlateSlateWeb.Schema.Query.MenuItemsTest do
     assert_value json_response(response, 200) == %{"data" => %{"menuItems" => [%{"name" => "Vada Pav"}]}}
   end
 
+  @query """
+  query ($filter: MenuItemFilter!) {
+    menuItems(filter: $filter) {
+      name
+      addedOn
+    }
+  }
+  """
+  @variables %{filter: %{"addedBefore" => "2017-01-20"}}
+  test "menuItems filtered by custom scalar" do
+    sides = PlateSlate.Repo.get_by!(PlateSlate.Menu.Category, name: "Sides")
+    %PlateSlate.Menu.Item{
+      name: "Garlic Fries",
+      added_on: ~D[2017-01-01],
+      price: 2.50,
+      category: sides
+    } |> PlateSlate.Repo.insert!
+
+    response = get(build_conn(), "/api", query: @query, variables: @variables)
+    assert_value json_response(response, 200) == %{"data" => %{"menuItems" => [%{"addedOn" => "2017-01-01", "name" => "Garlic Fries"}]}}
+  end
+
+  @query """
+  query ($filter: MenuItemFilter!) {
+    menuItems(filter: $filter) {
+      name
+    }
+  }
+  """
+  @variables %{filter: %{addedBefore: "not-a-date"}}
+  test "menuItems filtered by custom scalar with error" do
+    response = get(build_conn(), "/api", query: @query, variables: @variables)
+
+    assert_value json_response(response, 400) == %{"errors" => [%{"locations" => [%{"column" => 0, "line" => 2}], "message" => "Argument \"filter\" has invalid value $filter.\nIn field \"addedBefore\": Expected type \"Date\", found \"not-a-date\"."}]}
+  end
+
 end
